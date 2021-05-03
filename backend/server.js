@@ -1,25 +1,61 @@
 import express from 'express'
 import fetch from 'node-fetch'
 import dotenv from 'dotenv'
+import cheerio from 'cheerio'
+import path, { dirname } from 'path'
+import { fileURLToPath } from 'url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = dirname(__filename)
 
 dotenv.config()
-
 const app = express()
 
-app.get('/', (req, res) => {
+app.use(express.static(path.join(__dirname, 'build')))
+
+app.get('/api', (req, res) => {
   res.send('API is running...')
 })
 
-const searchLat = 45.5234515
-const searchLng = -122.6762071
-
 const api_key = process.env.REACT_APP_GKEY
-const api_url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${searchLat},${searchLng}&radius=20000&type=atm&keyword=bitcoin&key=${api_key}`
 
-app.get('/api/search', async (req, res) => {
-  const api_res = await fetch(api_url)
-  const { results } = await api_res.json()
-  res.json(results)
+app.get('/api/search/:location', async (req, res) => {
+  const location = await req.params.location.split(',')
+  const searchLat = location[0]
+  const searchLng = location[1]
+  if (location) {
+    const api_url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${searchLat},${searchLng}&radius=20000&type=atm&keyword=bitcoin&key=${api_key}`
+    const api_res = await fetch(api_url)
+    const { results } = await api_res.json()
+    res.json(results)
+  } else {
+    res.status(404)
+    throw new Error('Location not found')
+  }
+})
+
+app.get('/api/scrape/:subject', async (req, res) => {
+  const subject = req.params.subject
+  const URL = `https://en.wikipedia.org/wiki/${subject}`
+  const list = []
+  const response = await (await fetch(URL)).text()
+  const $ = cheerio.load(response)
+  $('.citation a').each((idx, el) => {
+    const item = $(el).next().text()
+    if (item === '(PDF)') {
+      list.push($(el).attr('href'))
+    }
+  })
+
+  if (list.length > 0) {
+    res.send(list)
+  } else {
+    res.send('No PDFs available')
+  }
+})
+
+app.get('/*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'))
 })
 
 const PORT = process.env.PORT || 5000
