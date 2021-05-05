@@ -6,11 +6,11 @@ import {
   Row,
   Form,
   Button,
-  Dropdown,
-  InputGroup,
-  DropdownButton,
+  ButtonGroup,
+  ToggleButton,
 } from 'react-bootstrap'
 import axios from 'axios'
+import CurrencyDisplay from '../components/CurrencyDisplay'
 
 const HomeScreen = () => {
   const [results, setResults] = useState([])
@@ -20,7 +20,15 @@ const HomeScreen = () => {
     coordinates: { lat: 45.5234515, lng: -122.6762071 },
   })
   const [searchedLocation, setSearchedLocation] = useState('')
+  const [btcValue, setBtcValue] = useState(55054.7)
   const [currency, setCurrency] = useState('')
+  const [convertedCurrency, setConvertedCurrency] = useState('')
+  const [radioValue, setRadioValue] = useState('1')
+
+  const radios = [
+    { name: 'USD to BTC', value: '1' },
+    { name: 'BTC to USD', value: '2' },
+  ]
 
   // const getUserLocation = async () => {
   //   navigator.geolocation.getCurrentPosition(function (location) {
@@ -55,8 +63,20 @@ const HomeScreen = () => {
     fetchResults()
   }, [])
 
-  const submitHandlerSearch = () => {}
-  const submitHandlerConvert = () => {}
+  useEffect(async () => {
+    setConvertedCurrency('')
+  }, [radioValue])
+
+  const submitHandlerSearch = (e) => {
+    e.preventDefault()
+    console.log(searchedLocation)
+  }
+  const submitHandlerConvert = (e) => {
+    e.preventDefault()
+    if (radioValue === '1') setConvertedCurrency(currency / btcValue)
+    if (radioValue === '2') setConvertedCurrency(currency * btcValue)
+    setCurrency('')
+  }
 
   return (
     <>
@@ -78,29 +98,49 @@ const HomeScreen = () => {
             <p className='pt-3'>Search location by zip code or city</p>
           </Form>
           <hr />
-          <span className='text-center my-4 py-3 px-3 badge badge-primary'>
-            1 BTC = $55,054.70
-          </span>
+          {/* <span className='text-center my-4 py-3 px-3 badge badge-primary'>
+            1 BTC = $
+            {`${btcValue.toLocaleString('en-us', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`}
+          </span> */}
+
+          {/* <CurrencyDisplay currency={btcValue} /> */}
+
           <Form onSubmit={submitHandlerConvert}>
             <Form.Group controlId='convert' className='my-3'>
               <Form.Control
                 type='text'
                 placeholder='Enter Currency...'
                 value={currency}
-                onChange={(e) =>
-                  setSearchedLocation(e.target.value)
-                }></Form.Control>
+                onChange={(e) => setCurrency(e.target.value)}></Form.Control>
             </Form.Group>
-            <DropdownButton
-              className='dropdown my-3'
-              as={InputGroup.Prepend}
-              variant='outline-primary'
-              title='Select Conversion'
-              id='input-group-dropdown-1'>
-              <Dropdown.Item href='#'>BTC to USD</Dropdown.Item>
-              <Dropdown.Item href='#'>USD to BTC</Dropdown.Item>
-            </DropdownButton>
+            <ButtonGroup toggle className=''>
+              {radios.map((radio, idx) => (
+                <ToggleButton
+                  key={idx}
+                  type='radio'
+                  variant='outline-primary'
+                  name='radio'
+                  value={radio.value}
+                  checked={radioValue === radio.value}
+                  onChange={(e) => setRadioValue(e.currentTarget.value)}>
+                  {radio.name}
+                </ToggleButton>
+              ))}
+            </ButtonGroup>
+            <br />
+            <Button className='my-3' type='submit' variant='outline-primary'>
+              covert currency
+            </Button>
           </Form>
+          {convertedCurrency && (
+            <CurrencyDisplay
+              currency={convertedCurrency}
+              radioValue={radioValue}
+            />
+          )}
         </Col>
         <Col xs={12} md={6}>
           {!loading ? (
