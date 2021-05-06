@@ -1,5 +1,4 @@
 import GoogleMapReact from 'google-map-react'
-import { useState } from 'react'
 import ATMMarker from './ATMMarker'
 
 const Map = ({ location, results, zoom }) => {
