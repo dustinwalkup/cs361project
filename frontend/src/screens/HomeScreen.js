@@ -30,7 +30,8 @@ const HomeScreen = () => {
   //   })
   // }
 
-  useEffect(async () => {
+  useEffect(() => {
+    console.log(location)
     setLoading(true)
     // if (!('geolocation' in navigator)) {
     //   setUserLocation((state) => ({
@@ -49,21 +50,39 @@ const HomeScreen = () => {
       setLoading(false)
     }
     fetchResults()
-  }, [])
+    setSearchedLocation('')
+  }, [location])
 
-  useEffect(async () => {
+  useEffect(() => {
     setBTCValue(USDValue / liveBTC)
     setBTCChange(false)
-  }, [BTCChange])
+  }, [BTCChange, USDValue, liveBTC])
 
-  useEffect(async () => {
+  useEffect(() => {
     setUSDValue(BTCValue * liveBTC)
     setUSDChange(false)
-  }, [USDChange])
+  }, [USDChange, BTCValue, liveBTC])
 
   const submitHandlerSearch = (e) => {
     e.preventDefault()
-    console.log(searchedLocation)
+    const api_key = process.env.REACT_APP_GKEY
+    const getCoordinates = async () => {
+      const { data } = await axios.get(
+        `https://maps.googleapis.com/maps/api/geocode/json?address=${searchedLocation}&key=${api_key}`
+      )
+
+      setLocation((location) => {
+        return {
+          ...location,
+          coordinates: {
+            ...location.coordinates,
+            lat: data.results[0].geometry.location.lat,
+            lng: data.results[0].geometry.location.lng,
+          },
+        }
+      })
+    }
+    getCoordinates()
   }
 
   const USDChangeHandler = (e) => {
@@ -81,11 +100,11 @@ const HomeScreen = () => {
         <Col className='text-center' xs={12} md={6}>
           <Form onSubmit={submitHandlerSearch}>
             <h3 className='mb-4'>Locate a Bitcoin ATM near you</h3>
-            <p className='py-4'>Search location by zip code or city</p>
+            <p className='py-4'>Search location by address, city or zip code</p>
             <Form.Group controlId='search'>
               <Form.Control
                 type='text'
-                placeholder='Enter Location to search for BTC ATMs...'
+                placeholder='Enter location to search for BTC ATMs...'
                 value={searchedLocation}
                 onChange={(e) =>
                   setSearchedLocation(e.target.value)
