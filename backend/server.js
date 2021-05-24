@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 import cheerio from 'cheerio'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
-import sendMail from './mail.js'
+// import sendMail from './mail.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -60,22 +60,21 @@ app.get('/api/scrape/:subject', async (req, res) => {
 })
 
 // Data parsing
-app.use(
-  express.urlencoded({
-    extended: false,
-  })
-)
-app.use(express.json())
+// app.use(
+//   express.urlencoded({
+//     extended: false,
+//   })
+// )
+// app.use(express.json())
 app.post('/api/contact', (req, res) => {
-  // TODO:
-  const { name, email, subject, message } = req.body
-  sendMail(email, subject, message, (err) => {
-    if (err) {
-      res.status(500).json({ message: 'Internal Error' })
-    } else {
-      res.json({ message: 'Message recieved' })
-    }
-  })
+  //   const { name, email, subject, message } = req.body
+  //   sendMail(email, subject, message, (err) => {
+  //     if (err) {
+  //       res.status(500).json({ message: 'Internal Error' })
+  //     } else {
+  res.json({ message: 'Message recieved' })
+  //     }
+  //   })
 })
 
 app.get('/*', (req, res) => {
