@@ -4,6 +4,7 @@ import dotenv from 'dotenv'
 import cheerio from 'cheerio'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
+import sendMail from './mail.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
@@ -13,8 +14,12 @@ const app = express()
 
 app.use(express.static(path.join(__dirname, 'build')))
 
-app.get('/api', (req, res) => {
-  res.send('API is running...')
+app.get('/api', async (req, res) => {
+  const results = await fetch(
+    'http://triviabot-converter.herokuapp.com/convert?crypto1=BTC&curr1=USD'
+  )
+  const BTCValue = await results.json()
+  res.json(BTCValue.BTC.USD)
 })
 
 const api_key = process.env.REACT_APP_GKEY
@@ -52,6 +57,25 @@ app.get('/api/scrape/:subject', async (req, res) => {
   } else {
     res.send('No PDFs available')
   }
+})
+
+// Data parsing
+app.use(
+  express.urlencoded({
+    extended: false,
+  })
+)
+app.use(express.json())
+app.post('/api/contact', (req, res) => {
+  // TODO:
+  const { name, email, subject, message } = req.body
+  sendMail(email, subject, message, (err) => {
+    if (err) {
+      res.status(500).json({ message: 'Internal Error' })
+    } else {
+      res.json({ message: 'Message recieved' })
+    }
+  })
 })
 
 app.get('/*', (req, res) => {
