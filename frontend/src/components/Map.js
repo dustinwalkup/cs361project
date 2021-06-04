@@ -11,10 +11,10 @@ const Map = ({ location, results, zoom, getUserLocation }) => {
     setLocationInfo(null)
   }
 
-  const markers = results.map((e, index) => {
+  const markers = results.map((e, x) => {
     return (
       <ATMMarker
-        key={index}
+        key={x}
         lat={e.geometry.location.lat}
         lng={e.geometry.location.lng}
         onClick={() =>
@@ -34,8 +34,8 @@ const Map = ({ location, results, zoom, getUserLocation }) => {
         defaultCenter={location.coordinates}
         defaultZoom={zoom}>
         {markers}
-        <GeoLocateIcon onClick={getUserLocation} />
       </GoogleMapReact>
+      <GeoLocateIcon onClick={getUserLocation} />
       {locationInfo && (
         <LocationInfoBox info={locationInfo} closeBox={closeBox} />
       )}

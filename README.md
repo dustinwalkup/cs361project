@@ -1,6 +1,10 @@
 # cs361project
 
-This is a project for Software Engineering I
+BTC ATM Locator is a project that was designed and developed for CS 361 Software Engineering I at Oregon State in the Spring of 2021
+
+This project was part of a microservices project with 4 other students from the class. It consumes the BTC to USD conversion rate as an API from another service
+
+This project also serves as a Wikipedia page PDF scraper
 
 API Guide
 

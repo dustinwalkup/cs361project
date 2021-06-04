@@ -4,16 +4,18 @@ import dotenv from 'dotenv'
 import cheerio from 'cheerio'
 import path, { dirname } from 'path'
 import { fileURLToPath } from 'url'
-// import sendMail from './mail.js'
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = dirname(__filename)
 
 dotenv.config()
+
 const app = express()
 
+// used to build project
 app.use(express.static(path.join(__dirname, 'build')))
 
+// endpoint retrieves current BTC to USD rate
 app.get('/api', async (req, res) => {
   const results = await fetch(
     'http://triviabot-converter.herokuapp.com/convert?crypto1=BTC&curr1=USD'
@@ -22,8 +24,10 @@ app.get('/api', async (req, res) => {
   res.json(BTCValue.BTC.USD)
 })
 
+// google maps api key
 const api_key = process.env.REACT_APP_GKEY
 
+// end point will return a list of BTC ATMs
 app.get('/api/search/:location', async (req, res) => {
   const location = await req.params.location.split(',')
   const searchLat = location[0]
@@ -39,11 +43,8 @@ app.get('/api/search/:location', async (req, res) => {
   }
 })
 
-app.get('/api/scrape/:subject', async (req, res) => {
-  const subject = req.params.subject
-  const URL = `https://en.wikipedia.org/wiki/${subject}`
+function scrape(response) {
   const list = []
-  const response = await (await fetch(URL)).text()
   const $ = cheerio.load(response)
   $('.citation a').each((idx, el) => {
     const item = $(el).next().text()
@@ -51,7 +52,14 @@ app.get('/api/scrape/:subject', async (req, res) => {
       list.push($(el).attr('href'))
     }
   })
-
+  return list
+}
+// endpoint for my microservices scraper that will scrape wikipedia and return a list of PDFs from the page that is searched
+app.get('/api/scrape/:subject', async (req, res) => {
+  const subject = req.params.subject
+  const URL = `https://en.wikipedia.org/wiki/${subject}`
+  const response = await (await fetch(URL)).text()
+  const list = scrape(response)
   if (list.length > 0) {
     res.send(list)
   } else {
@@ -59,22 +67,8 @@ app.get('/api/scrape/:subject', async (req, res) => {
   }
 })
 
-// Data parsing
-// app.use(
-//   express.urlencoded({
-//     extended: false,
-//   })
-// )
-// app.use(express.json())
 app.post('/api/contact', (req, res) => {
-  //   const { name, email, subject, message } = req.body
-  //   sendMail(email, subject, message, (err) => {
-  //     if (err) {
-  //       res.status(500).json({ message: 'Internal Error' })
-  //     } else {
   res.json({ message: 'Message recieved' })
-  //     }
-  //   })
 })
 
 app.get('/*', (req, res) => {
